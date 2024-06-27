@@ -1,3 +1,91 @@
+// import axios from 'axios';
+// import React, { useEffect, useState } from 'react';
+// import styled from '@emotion/styled';
+// import Post from './Post';
+// import Container from '../common/Container';
+// import useWindowWidth from '../hooks/useWindowWidth';
+
+// const PostListContainer = styled.div(() => ({
+//   display: 'flex',
+//   flexWrap: 'wrap',
+//   justifyContent: 'center',
+// }));
+
+// const LoadMoreButton = styled.button(() => ({
+//   padding: '10px 20px',
+//   backgroundColor: '#007bff',
+//   color: '#fff',
+//   border: 'none',
+//   borderRadius: 5,
+//   cursor: 'pointer',
+//   fontSize: 16,
+//   marginTop: 20,
+//   transition: 'background-color 0.3s ease',
+//   fontWeight: 600,
+
+//   '&:hover': {
+//     backgroundColor: '#0056b3',
+//   },
+//   '&:disabled': {
+//     backgroundColor: '#808080',
+//     cursor: 'default',
+//   },
+// }));
+
+// export default function Posts() {
+//   const [posts, setPosts] = useState([]);
+//   const [isLoading, setIsLoading] = useState(false);
+
+//   const { isSmallerDevice } = useWindowWidth();
+
+//   useEffect(() => {
+//     const fetchPost = async () => {
+//       const res  = await fetch('https://jsonplaceholder.typicode.com/posts?_limit=9&_page=${page}')
+//       const posts = await res.json(); 
+//       // const { data: posts } = await fetch('https://jsonplaceholder.typicode.com/posts?_limit=9&_page=${page}')
+//         // , {
+//       //   params: { start: 0, limit: isSmallerDevice ? 5 : 10 },
+//       // });
+//       setPosts(posts);
+//     };
+
+//     fetchPost();
+//   }, [isSmallerDevice]);
+
+//   const handleClick = () => {
+//     setIsLoading(true);
+
+//     setTimeout(() => {
+//       setIsLoading(false);
+//     }, 3000);
+//   };
+
+//   return (
+//     <Container>
+//       <PostListContainer>
+//         {posts.map(post => (
+//           <Post post={post} />
+//         ))}
+//       </PostListContainer>
+
+//       <div style={{ display: 'flex', justifyContent: 'center' }}>
+//         <LoadMoreButton onClick={handleClick} disabled={isLoading}>
+//           {!isLoading ? 'Load More' : 'Loading...'}
+//         </LoadMoreButton>
+//       </div>
+//     </Container>
+//   );
+// }
+
+
+
+
+
+
+
+
+
+
 import axios from 'axios';
 import React, { useEffect, useState } from 'react';
 import styled from '@emotion/styled';
@@ -35,41 +123,49 @@ const LoadMoreButton = styled.button(() => ({
 export default function Posts() {
   const [posts, setPosts] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [page, setPage] = useState(1);
+  const [hasMorePosts, setHasMorePosts] = useState(true);
 
   const { isSmallerDevice } = useWindowWidth();
 
   useEffect(() => {
     const fetchPost = async () => {
-      const { data: posts } = await axios.get('/api/v1/posts', {
-        params: { start: 0, limit: isSmallerDevice ? 5 : 10 },
-      });
-      setPosts(posts);
+      const res = await fetch(`https://jsonplaceholder.typicode.com/posts?_limit=9&_page=${page}`);
+      const newPosts = await res.json();
+      if (newPosts.length === 0) {
+        setHasMorePosts(false);
+      } else {
+        setPosts(prevPosts => [...prevPosts, ...newPosts]);
+      }
     };
 
     fetchPost();
-  }, [isSmallerDevice]);
+  }, [page]);
 
   const handleClick = () => {
     setIsLoading(true);
-
+    setPage(prevPage => prevPage + 1);
     setTimeout(() => {
       setIsLoading(false);
-    }, 3000);
+    }, 1000);
   };
 
   return (
     <Container>
       <PostListContainer>
         {posts.map(post => (
-          <Post post={post} />
+          <Post key={post.id} post={post} />
         ))}
       </PostListContainer>
 
-      <div style={{ display: 'flex', justifyContent: 'center' }}>
-        <LoadMoreButton onClick={handleClick} disabled={isLoading}>
-          {!isLoading ? 'Load More' : 'Loading...'}
-        </LoadMoreButton>
-      </div>
+      {hasMorePosts && (
+        <div style={{ display: 'flex', justifyContent: 'center' }}>
+          <LoadMoreButton onClick={handleClick} disabled={isLoading}>
+            {!isLoading ? 'Load More' : 'Loading...'}
+          </LoadMoreButton>
+        </div>
+      )}
     </Container>
   );
 }
+
